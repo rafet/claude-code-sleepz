@@ -144,12 +144,11 @@ def main():
 
     debug_log(f"Modified command: {modified_command}")
 
-    # Return updatedInput with ask permission (user still sees the dialog)
+    # Return updatedInput only — let Claude Code decide on permission naturally
     # Must use stdout + exit 0 for JSON to be parsed by Claude Code
     result = {
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",
-            "permissionDecision": "ask",
             "updatedInput": {"command": modified_command},
         }
     }
