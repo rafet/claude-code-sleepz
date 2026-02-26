@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Unit tests for smart-sleep.sh wrapper script
+# Unit tests for sleepz.sh wrapper script
 
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-WRAPPER="$SCRIPT_DIR/../plugins/smart-sleep/scripts/smart-sleep.sh"
+WRAPPER="$SCRIPT_DIR/../plugins/sleepz/scripts/sleepz.sh"
 PASS=0
 FAIL=0
 
@@ -19,20 +19,20 @@ assert_contains() {
     fi
 }
 
-echo "=== smart-sleep.sh wrapper tests ==="
+echo "=== sleepz.sh wrapper tests ==="
 echo ""
 
 # Test 1: Elapsed time exceeds duration -> skip entirely
 echo "Test: elapsed > duration skips sleep"
 HOOK_TS=$(python3 -c "import time; print(format(int((time.time() - 120) % 86400), 'x'))")
 OUTPUT=$(bash "$WRAPPER" 60 "$HOOK_TS" 2>&1)
-assert_contains "skip message" "0s (skipped entirely)" "$OUTPUT"
+assert_contains "skip message" "0s (skipped)" "$OUTPUT"
 
 # Test 2: Elapsed time less than duration -> adjusted sleep (use tiny duration)
 echo "Test: elapsed < duration adjusts sleep"
 HOOK_TS=$(python3 -c "import time; print(format(int((time.time() - 0.5) % 86400), 'x'))")
 OUTPUT=$(bash "$WRAPPER" 2 "$HOOK_TS" 2>&1)
-assert_contains "adjusted message" "adjusted 2s ->" "$OUTPUT"
+assert_contains "adjusted message" "sleepz: 2s ->" "$OUTPUT"
 
 # Test 3: Missing arguments -> graceful fallback
 echo "Test: missing arguments"
@@ -43,7 +43,7 @@ assert_contains "missing args message" "missing arguments" "$OUTPUT"
 echo "Test: very recent timestamp"
 HOOK_TS=$(python3 -c "import time; print(format(int(time.time() % 86400), 'x'))")
 OUTPUT=$(bash "$WRAPPER" 0.5 "$HOOK_TS" 2>&1)
-assert_contains "adjusted message" "adjusted 0.5s ->" "$OUTPUT"
+assert_contains "adjusted message" "sleepz: 0.5s ->" "$OUTPUT"
 
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="

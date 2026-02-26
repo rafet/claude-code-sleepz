@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Unit tests for smart_sleep_hook.py"""
+"""Unit tests for sleepz_hook.py"""
 
 import json
 import os
@@ -12,9 +12,9 @@ HOOK_SCRIPT = os.path.join(
     os.path.dirname(__file__),
     "..",
     "plugins",
-    "smart-sleep",
+    "sleepz",
     "hooks",
-    "smart_sleep_hook.py",
+    "sleepz_hook.py",
 )
 
 
@@ -52,7 +52,7 @@ class TestHookDetection(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIsNotNone(output)
         cmd = output["hookSpecificOutput"]["updatedInput"]["command"]
-        self.assertIn("smart-sleep", cmd)
+        self.assertIn("sleepz", cmd)
 
     def test_sleep_with_continuation(self):
         code, output = run_hook("sleep 60 && echo done")
@@ -122,7 +122,7 @@ class TestHookOutput(unittest.TestCase):
     def test_only_first_sleep_replaced(self):
         _, output = run_hook("sleep 10 && sleep 20")
         cmd = output["hookSpecificOutput"]["updatedInput"]["command"]
-        self.assertIn("smart-sleep", cmd)
+        self.assertIn("sleepz", cmd)
         # The second sleep should remain untouched
         self.assertIn("&& sleep 20", cmd)
 
@@ -130,31 +130,29 @@ class TestHookOutput(unittest.TestCase):
         _, output = run_hook("sleep 5")
         cmd = output["hookSpecificOutput"]["updatedInput"]["command"]
         # Timestamp should be a hex value (seconds since midnight)
-        # Format: smart-sleep 5 <hex>
-        self.assertRegex(cmd, r"smart-sleep 5 [0-9a-f]+")
+        self.assertRegex(cmd, r"sleepz 5 [0-9a-f]+")
         # Should NOT contain temp file paths
         self.assertNotIn("/var/folders", cmd)
-        self.assertNotIn("smart-sleep-ts-", cmd)
 
     def test_uses_short_symlink_path(self):
         _, output = run_hook("sleep 5")
         cmd = output["hookSpecificOutput"]["updatedInput"]["command"]
-        # Should use ~/.claude/bin/smart-sleep (short path)
-        self.assertIn("~/.claude/bin/smart-sleep", cmd)
+        # Should use ~/.claude/bin/sleepz (short path)
+        self.assertIn("~/.claude/bin/sleepz", cmd)
         # Should NOT contain long cache paths
         self.assertNotIn("plugins/cache", cmd)
 
 
 class TestKillSwitch(unittest.TestCase):
-    """Test the DISABLE_CC_SMART_SLEEP environment variable."""
+    """Test the DISABLE_CC_SLEEPZ environment variable."""
 
     def test_disabled_via_env(self):
-        code, output = run_hook("sleep 60", env_override={"DISABLE_CC_SMART_SLEEP": "1"})
+        code, output = run_hook("sleep 60", env_override={"DISABLE_CC_SLEEPZ": "1"})
         self.assertEqual(code, 0)
         self.assertIsNone(output)
 
     def test_enabled_by_default(self):
-        code, output = run_hook("sleep 60", env_override={"DISABLE_CC_SMART_SLEEP": ""})
+        code, output = run_hook("sleep 60", env_override={"DISABLE_CC_SLEEPZ": ""})
         self.assertEqual(code, 0)
         self.assertIsNotNone(output)
 

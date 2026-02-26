@@ -1,6 +1,6 @@
 {
-  "name": "smart-sleep",
-  "version": "1.0.0",
+  "name": "sleepz",
+  "version": "1.1.0",
   "description": "Automatically adjusts sleep durations in Bash commands to account for permission dialog wait time",
   "author": {
     "name": "Rafet Topcu"
