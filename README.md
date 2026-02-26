@@ -1,4 +1,4 @@
-# Smart Sleep
+# Sleepz
 
 A [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) plugin that adjusts `sleep` durations in Bash commands to account for the time you spend in the permission dialog.
 
@@ -30,7 +30,7 @@ sleep 60 && npm run build
 
 ```
 /plugin marketplace add rafet/claude-smart-sleep
-/plugin install smart-sleep@claude-smart-sleep
+/plugin install sleepz@claude-smart-sleep
 ```
 
 ## What Gets Adjusted
@@ -51,10 +51,10 @@ sleep 60 && npm run build
 Disable the plugin temporarily:
 
 ```bash
-export DISABLE_CC_SMART_SLEEP=1
+export DISABLE_CC_SLEEPZ=1
 ```
 
-Debug logs are written to `/tmp/smart-sleep-log.txt`.
+Debug logs are written to `/tmp/sleepz-log.txt`.
 
 ## Requirements
 

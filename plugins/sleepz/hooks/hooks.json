@@ -1,0 +1,17 @@
+{
+  "description": "Sleepz hook that adjusts sleep durations in Bash commands to account for permission dialog wait time",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sleepz_hook.py",
+            "timeout": 10000
+          }
+        ]
+      }
+    ]
+  }
+}

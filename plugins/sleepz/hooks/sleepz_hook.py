@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Smart Sleep Hook for Claude Code
+Sleepz Hook for Claude Code
 
 PreToolUse hook that detects `sleep <number>` in Bash commands and returns
-updatedInput with the command modified to use the smart-sleep wrapper.
+updatedInput with the command modified to use the sleepz wrapper.
 The wrapper subtracts the time the user spent in the permission dialog
 from the sleep duration.
 """
@@ -18,10 +18,10 @@ from datetime import datetime
 from pathlib import Path
 
 # Debug log file
-DEBUG_LOG_FILE = "/tmp/smart-sleep-log.txt"
+DEBUG_LOG_FILE = "/tmp/sleepz-log.txt"
 
 # Short symlink path for cleaner permission dialog display
-SYMLINK_PATH = os.path.expanduser("~/.claude/bin/smart-sleep")
+SYMLINK_PATH = os.path.expanduser("~/.claude/bin/sleepz")
 
 
 def debug_log(message):
@@ -35,7 +35,7 @@ def debug_log(message):
 
 
 def ensure_symlink(target_script):
-    """Ensure ~/.claude/bin/smart-sleep symlink exists and points to the target."""
+    """Ensure ~/.claude/bin/sleepz symlink exists and points to the target."""
     try:
         symlink = Path(SYMLINK_PATH)
         symlink.parent.mkdir(parents=True, exist_ok=True)
@@ -66,8 +66,8 @@ NESTED_BASH_PATTERN = re.compile(r'\bbash\s+-c\s+["\']')
 def main():
     """Main hook function."""
     # Kill switch via environment variable
-    if os.environ.get("DISABLE_CC_SMART_SLEEP", "") == "1":
-        debug_log("Smart sleep disabled via DISABLE_CC_SMART_SLEEP=1")
+    if os.environ.get("DISABLE_CC_SLEEPZ", "") == "1":
+        debug_log("Sleepz disabled via DISABLE_CC_SLEEPZ=1")
         sys.exit(0)
 
     # Read input from stdin
@@ -117,28 +117,28 @@ def main():
 
     debug_log(f"Found sleep {duration_str} in command: {command}")
 
-    # Resolve the plugin root to find smart-sleep.sh
+    # Resolve the plugin root to find sleepz.sh
     plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", "")
     if not plugin_root:
         plugin_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    smart_sleep_script = os.path.join(plugin_root, "scripts", "smart-sleep.sh")
+    sleepz_script = os.path.join(plugin_root, "scripts", "sleepz.sh")
 
-    if not os.path.isfile(smart_sleep_script):
-        debug_log(f"smart-sleep.sh not found at {smart_sleep_script}")
+    if not os.path.isfile(sleepz_script):
+        debug_log(f"sleepz.sh not found at {sleepz_script}")
         sys.exit(0)
 
     # Determine the command path to use in the replacement
     # Prefer short symlink path for cleaner permission dialog display
-    if ensure_symlink(smart_sleep_script):
-        cmd_path = "~/.claude/bin/smart-sleep"
+    if ensure_symlink(sleepz_script):
+        cmd_path = "~/.claude/bin/sleepz"
     else:
-        cmd_path = smart_sleep_script
+        cmd_path = sleepz_script
 
     # Record current time as seconds-since-midnight in hex for shorter display
     hook_ts = format(int(time.time() % 86400), 'x')
 
-    # Build the replacement: `sleep N` -> `smart-sleep N <timestamp>`
+    # Build the replacement: `sleep N` -> `sleepz N <timestamp>`
     sleep_replacement = f'{cmd_path} {duration_str} {hook_ts}'
     modified_command = command[: match.start()] + sleep_replacement + command[match.end() :]
 
