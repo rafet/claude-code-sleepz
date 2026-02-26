@@ -18,7 +18,11 @@ HOOK_SCRIPT = os.path.join(
 
 
 def run_hook(command, env_override=None):
-    """Run the hook with a given Bash command and return (exit_code, stderr_json)."""
+    """Run the hook with a given Bash command and return (exit_code, stdout_json).
+
+    The hook outputs JSON to stdout and exits with 0 when it modifies a command.
+    When the command doesn't match (no sleep), it also exits 0 but with no stdout.
+    """
     payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
     env = os.environ.copy()
     if env_override:
@@ -31,9 +35,9 @@ def run_hook(command, env_override=None):
         env=env,
     )
     parsed = None
-    if result.stderr.strip():
+    if result.stdout.strip():
         try:
-            parsed = json.loads(result.stderr)
+            parsed = json.loads(result.stdout)
         except json.JSONDecodeError:
             pass
     return result.returncode, parsed
@@ -44,38 +48,45 @@ class TestHookDetection(unittest.TestCase):
 
     def test_basic_sleep(self):
         code, output = run_hook("sleep 60")
-        self.assertEqual(code, 2)
+        self.assertEqual(code, 0)
+        self.assertIsNotNone(output)
         self.assertIn("smart-sleep.sh", output["hookSpecificOutput"]["updatedInput"]["command"])
 
     def test_sleep_with_continuation(self):
         code, output = run_hook("sleep 60 && echo done")
-        self.assertEqual(code, 2)
+        self.assertEqual(code, 0)
         self.assertIn("&& echo done", output["hookSpecificOutput"]["updatedInput"]["command"])
 
     def test_fractional_sleep(self):
         code, output = run_hook("sleep 0.5")
-        self.assertEqual(code, 2)
+        self.assertEqual(code, 0)
+        self.assertIsNotNone(output)
         self.assertIn("0.5", output["hookSpecificOutput"]["updatedInput"]["command"])
 
     def test_no_sleep(self):
-        code, _ = run_hook("echo hello")
+        code, output = run_hook("echo hello")
         self.assertEqual(code, 0)
+        self.assertIsNone(output)
 
     def test_sleep_with_variable(self):
-        code, _ = run_hook("sleep $VAR")
+        code, output = run_hook("sleep $VAR")
         self.assertEqual(code, 0)
+        self.assertIsNone(output)
 
     def test_sleep_with_suffix_s(self):
-        code, _ = run_hook("sleep 60s")
+        code, output = run_hook("sleep 60s")
         self.assertEqual(code, 0)
+        self.assertIsNone(output)
 
     def test_sleep_with_suffix_m(self):
-        code, _ = run_hook("sleep 1m")
+        code, output = run_hook("sleep 1m")
         self.assertEqual(code, 0)
+        self.assertIsNone(output)
 
     def test_nested_bash_c(self):
-        code, _ = run_hook('bash -c "sleep 60"')
+        code, output = run_hook('bash -c "sleep 60"')
         self.assertEqual(code, 0)
+        self.assertIsNone(output)
 
     def test_non_bash_tool(self):
         payload = json.dumps({"tool_name": "Edit", "tool_input": {"command": "sleep 60"}})
@@ -86,10 +97,12 @@ class TestHookDetection(unittest.TestCase):
             text=True,
         )
         self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout.strip(), "")
 
     def test_empty_command(self):
-        code, _ = run_hook("")
+        code, output = run_hook("")
         self.assertEqual(code, 0)
+        self.assertIsNone(output)
 
 
 class TestHookOutput(unittest.TestCase):
@@ -99,6 +112,7 @@ class TestHookOutput(unittest.TestCase):
         _, output = run_hook("sleep 30")
         self.assertIn("hookSpecificOutput", output)
         hook_output = output["hookSpecificOutput"]
+        self.assertEqual(hook_output["hookEventName"], "PreToolUse")
         self.assertEqual(hook_output["permissionDecision"], "ask")
         self.assertIn("updatedInput", hook_output)
         self.assertIn("command", hook_output["updatedInput"])
@@ -126,12 +140,14 @@ class TestKillSwitch(unittest.TestCase):
     """Test the DISABLE_CC_SMART_SLEEP environment variable."""
 
     def test_disabled_via_env(self):
-        code, _ = run_hook("sleep 60", env_override={"DISABLE_CC_SMART_SLEEP": "1"})
+        code, output = run_hook("sleep 60", env_override={"DISABLE_CC_SMART_SLEEP": "1"})
         self.assertEqual(code, 0)
+        self.assertIsNone(output)
 
     def test_enabled_by_default(self):
-        code, _ = run_hook("sleep 60", env_override={"DISABLE_CC_SMART_SLEEP": ""})
-        self.assertEqual(code, 2)
+        code, output = run_hook("sleep 60", env_override={"DISABLE_CC_SMART_SLEEP": ""})
+        self.assertEqual(code, 0)
+        self.assertIsNotNone(output)
 
 
 if __name__ == "__main__":
