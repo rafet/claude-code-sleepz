@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="img.png" alt="Sleepz mascot" width="260">
+  <img src="img.png" alt="Sleepz mascot" width="320">
 </p>
 
 <h1 align="center">Sleepz</h1>
