@@ -1,0 +1,8 @@
+{
+  "name": "smart-sleep",
+  "version": "1.0.0",
+  "description": "Automatically adjusts sleep durations in Bash commands to account for permission dialog wait time",
+  "author": {
+    "name": "Rafet Topcu"
+  }
+}

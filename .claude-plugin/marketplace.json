@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-smart-sleep",
+  "description": "A Claude Code plugin that adjusts sleep durations to account for permission dialog wait time",
+  "owner": {
+    "name": "Rafet Topcu"
+  },
+  "plugins": [
+    {
+      "name": "smart-sleep",
+      "description": "Automatically adjusts sleep durations in Bash commands to account for permission dialog wait time",
+      "version": "1.0.0",
+      "source": "./plugins/smart-sleep",
+      "category": "productivity"
+    }
+  ]
+}
