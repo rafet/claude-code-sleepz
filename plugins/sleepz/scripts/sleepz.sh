@@ -37,6 +37,8 @@ except Exception as e:
 
 if [[ "$REMAINING" == "0" ]]; then
     echo "sleepz: ${DURATION}s -> 0s (skipped)" >&2
+elif [[ "$REMAINING" == "${DURATION}" || "$REMAINING" == "${DURATION}.00" ]]; then
+    sleep "$REMAINING"
 else
     echo "sleepz: ${DURATION}s -> ${REMAINING}s" >&2
     sleep "$REMAINING"
