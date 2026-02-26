@@ -137,8 +137,8 @@ class TestHookOutput(unittest.TestCase):
     def test_uses_short_symlink_path(self):
         _, output = run_hook("sleep 5")
         cmd = output["hookSpecificOutput"]["updatedInput"]["command"]
-        # Should use ~/.claude/bin/sleepz (short path)
-        self.assertIn("~/.claude/bin/sleepz", cmd)
+        # Should use ~/.claude/sleepz (short path)
+        self.assertIn("~/.claude/sleepz", cmd)
         # Should NOT contain long cache paths
         self.assertNotIn("plugins/cache", cmd)
 

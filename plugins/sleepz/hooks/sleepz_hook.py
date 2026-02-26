@@ -21,7 +21,7 @@ from pathlib import Path
 DEBUG_LOG_FILE = "/tmp/sleepz-log.txt"
 
 # Short symlink path for cleaner permission dialog display
-SYMLINK_PATH = os.path.expanduser("~/.claude/bin/sleepz")
+SYMLINK_PATH = os.path.expanduser("~/.claude/sleepz")
 
 
 def debug_log(message):
@@ -131,7 +131,7 @@ def main():
     # Determine the command path to use in the replacement
     # Prefer short symlink path for cleaner permission dialog display
     if ensure_symlink(sleepz_script):
-        cmd_path = "~/.claude/bin/sleepz"
+        cmd_path = "~/.claude/sleepz"
     else:
         cmd_path = sleepz_script
 
