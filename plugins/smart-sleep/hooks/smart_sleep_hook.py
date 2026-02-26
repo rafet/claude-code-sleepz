@@ -122,15 +122,17 @@ def main():
     debug_log(f"Modified command: {modified_command}")
 
     # Return updatedInput with ask permission (user still sees the dialog)
+    # Must use stdout + exit 0 for JSON to be parsed by Claude Code
     result = {
         "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
             "permissionDecision": "ask",
             "updatedInput": {"command": modified_command},
         }
     }
 
-    print(json.dumps(result), file=sys.stderr)
-    sys.exit(2)
+    print(json.dumps(result))
+    sys.exit(0)
 
 
 if __name__ == "__main__":
