@@ -40,8 +40,8 @@ NESTED_BASH_PATTERN = re.compile(r'\bbash\s+-c\s+["\']')
 def main():
     """Main hook function."""
     # Kill switch via environment variable
-    if os.environ.get("DISABLE_SMART_SLEEP", "") == "1":
-        debug_log("Smart sleep disabled via DISABLE_SMART_SLEEP=1")
+    if os.environ.get("DISABLE_CC_SMART_SLEEP", "") == "1":
+        debug_log("Smart sleep disabled via DISABLE_CC_SMART_SLEEP=1")
         sys.exit(0)
 
     # Read input from stdin

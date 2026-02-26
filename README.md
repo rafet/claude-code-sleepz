@@ -51,7 +51,7 @@ sleep 60 && npm run build
 Disable the plugin temporarily:
 
 ```bash
-export DISABLE_SMART_SLEEP=1
+export DISABLE_CC_SMART_SLEEP=1
 ```
 
 Debug logs are written to `/tmp/smart-sleep-log.txt`.
