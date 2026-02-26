@@ -3,6 +3,7 @@
 
 import json
 import os
+import re
 import subprocess
 import sys
 import unittest
@@ -50,7 +51,8 @@ class TestHookDetection(unittest.TestCase):
         code, output = run_hook("sleep 60")
         self.assertEqual(code, 0)
         self.assertIsNotNone(output)
-        self.assertIn("smart-sleep.sh", output["hookSpecificOutput"]["updatedInput"]["command"])
+        cmd = output["hookSpecificOutput"]["updatedInput"]["command"]
+        self.assertIn("smart-sleep", cmd)
 
     def test_sleep_with_continuation(self):
         code, output = run_hook("sleep 60 && echo done")
@@ -120,20 +122,27 @@ class TestHookOutput(unittest.TestCase):
     def test_only_first_sleep_replaced(self):
         _, output = run_hook("sleep 10 && sleep 20")
         cmd = output["hookSpecificOutput"]["updatedInput"]["command"]
-        self.assertIn("smart-sleep.sh", cmd)
+        self.assertIn("smart-sleep", cmd)
         # The second sleep should remain untouched
         self.assertIn("&& sleep 20", cmd)
 
-    def test_timestamp_file_created(self):
+    def test_timestamp_passed_inline(self):
         _, output = run_hook("sleep 5")
         cmd = output["hookSpecificOutput"]["updatedInput"]["command"]
-        # Extract timestamp file path from the command
-        # Format: bash "/path/to/smart-sleep.sh" 5 "/path/to/ts-file.txt"
-        parts = cmd.split('"')
-        ts_file = parts[-2]  # second-to-last quoted string
-        self.assertTrue(os.path.isfile(ts_file), f"Timestamp file {ts_file} should exist")
-        # Clean up
-        os.unlink(ts_file)
+        # Timestamp should be a hex value (seconds since midnight)
+        # Format: smart-sleep 5 <hex>
+        self.assertRegex(cmd, r"smart-sleep 5 [0-9a-f]+")
+        # Should NOT contain temp file paths
+        self.assertNotIn("/var/folders", cmd)
+        self.assertNotIn("smart-sleep-ts-", cmd)
+
+    def test_uses_short_symlink_path(self):
+        _, output = run_hook("sleep 5")
+        cmd = output["hookSpecificOutput"]["updatedInput"]["command"]
+        # Should use ~/.claude/bin/smart-sleep (short path)
+        self.assertIn("~/.claude/bin/smart-sleep", cmd)
+        # Should NOT contain long cache paths
+        self.assertNotIn("plugins/cache", cmd)
 
 
 class TestKillSwitch(unittest.TestCase):
