@@ -29,8 +29,8 @@ sleep 60 && npm run build
 ## Install
 
 ```
-/plugin marketplace add rafet/claude-smart-sleep
-/plugin install sleepz@claude-smart-sleep
+/plugin marketplace add rafet/claude-code-sleepz
+/plugin install sleepz@claude-code-sleepz
 ```
 
 ## What Gets Adjusted

@@ -1,6 +1,6 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "claude-smart-sleep",
+  "name": "claude-code-sleepz",
   "description": "A Claude Code plugin that adjusts sleep durations to account for permission dialog wait time",
   "owner": {
     "name": "Rafet Topcu"
