@@ -10,6 +10,15 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/rafet/claude-code-sleepz/releases"><img src="https://img.shields.io/github/v/release/rafet/claude-code-sleepz" alt="GitHub release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://github.com/rafet/claude-code-sleepz/stargazers"><img src="https://img.shields.io/github/stars/rafet/claude-code-sleepz" alt="GitHub stars"></a>
+  <a href="https://github.com/rafet/claude-code-sleepz/issues"><img src="https://img.shields.io/github/issues/rafet/claude-code-sleepz" alt="GitHub issues"></a>
+  <img src="https://img.shields.io/badge/python-3-blue.svg" alt="Python 3">
+  <img src="https://img.shields.io/badge/Claude_Code-plugin-orange.svg" alt="Claude Code plugin">
+</p>
+
+<p align="center">
   <a href="#install">Install</a> · <a href="#how-it-works">How It Works</a> · <a href="#what-gets-adjusted">Compatibility</a> · <a href="#configuration">Configuration</a>
 </p>
 
