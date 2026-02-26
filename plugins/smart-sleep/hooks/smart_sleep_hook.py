@@ -2,22 +2,26 @@
 """
 Smart Sleep Hook for Claude Code
 
-PreToolUse hook that detects `sleep <number>` in Bash commands, records a
-timestamp to a temp file, and returns updatedInput with the command modified
-to use the smart-sleep.sh wrapper script. The wrapper subtracts the time
-the user spent in the permission dialog from the sleep duration.
+PreToolUse hook that detects `sleep <number>` in Bash commands and returns
+updatedInput with the command modified to use the smart-sleep wrapper.
+The wrapper subtracts the time the user spent in the permission dialog
+from the sleep duration.
 """
 
 import json
 import os
 import re
+import stat
 import sys
-import tempfile
 import time
 from datetime import datetime
+from pathlib import Path
 
 # Debug log file
 DEBUG_LOG_FILE = "/tmp/smart-sleep-log.txt"
+
+# Short symlink path for cleaner permission dialog display
+SYMLINK_PATH = os.path.expanduser("~/.claude/bin/smart-sleep")
 
 
 def debug_log(message):
@@ -28,6 +32,28 @@ def debug_log(message):
             f.write(f"[{timestamp}] {message}\n")
     except Exception:
         pass
+
+
+def ensure_symlink(target_script):
+    """Ensure ~/.claude/bin/smart-sleep symlink exists and points to the target."""
+    try:
+        symlink = Path(SYMLINK_PATH)
+        symlink.parent.mkdir(parents=True, exist_ok=True)
+
+        if symlink.is_symlink() or symlink.exists():
+            current_target = str(symlink.resolve())
+            if current_target == str(Path(target_script).resolve()):
+                return True
+            symlink.unlink()
+
+        symlink.symlink_to(target_script)
+        # Ensure the target is executable
+        os.chmod(target_script, os.stat(target_script).st_mode | stat.S_IEXEC)
+        debug_log(f"Created symlink {SYMLINK_PATH} -> {target_script}")
+        return True
+    except Exception as e:
+        debug_log(f"Failed to create symlink: {e}")
+        return False
 
 
 # Regex to match `sleep <number>` (integer or float, no suffix, no variable)
@@ -77,7 +103,6 @@ def main():
     duration_str = match.group(1)
 
     # Verify this isn't sleep with a suffix (e.g., sleep 60s, sleep 1m)
-    # Check the character immediately after our match
     match_end = match.end()
     if match_end < len(command) and command[match_end] in "smhd":
         debug_log(f"Skipping sleep with suffix: {command[match.start():match_end+1]}")
@@ -95,8 +120,6 @@ def main():
     # Resolve the plugin root to find smart-sleep.sh
     plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", "")
     if not plugin_root:
-        debug_log("CLAUDE_PLUGIN_ROOT not set, falling back")
-        # Try to derive from this script's location
         plugin_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     smart_sleep_script = os.path.join(plugin_root, "scripts", "smart-sleep.sh")
@@ -105,18 +128,18 @@ def main():
         debug_log(f"smart-sleep.sh not found at {smart_sleep_script}")
         sys.exit(0)
 
-    # Record current timestamp to a temp file
-    try:
-        fd, timestamp_file = tempfile.mkstemp(prefix="smart-sleep-ts-", suffix=".txt")
-        with os.fdopen(fd, "w") as f:
-            f.write(str(time.time()))
-        debug_log(f"Wrote timestamp to {timestamp_file}")
-    except Exception as e:
-        debug_log(f"Failed to write timestamp file: {e}")
-        sys.exit(0)
+    # Determine the command path to use in the replacement
+    # Prefer short symlink path for cleaner permission dialog display
+    if ensure_symlink(smart_sleep_script):
+        cmd_path = "~/.claude/bin/smart-sleep"
+    else:
+        cmd_path = smart_sleep_script
 
-    # Build the replacement: replace `sleep <duration>` with the smart-sleep wrapper call
-    sleep_replacement = f'bash "{smart_sleep_script}" {duration_str} "{timestamp_file}"'
+    # Record current timestamp — passed directly as an argument (no temp file)
+    hook_ts = f"{time.time():.4f}"
+
+    # Build the replacement: `sleep N` -> `smart-sleep N <timestamp>`
+    sleep_replacement = f'{cmd_path} {duration_str} {hook_ts}'
     modified_command = command[: match.start()] + sleep_replacement + command[match.end() :]
 
     debug_log(f"Modified command: {modified_command}")
