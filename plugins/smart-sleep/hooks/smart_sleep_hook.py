@@ -135,8 +135,8 @@ def main():
     else:
         cmd_path = smart_sleep_script
 
-    # Record current time as seconds-since-midnight for shorter display
-    hook_ts = str(int(time.time() % 86400))
+    # Record current time as seconds-since-midnight in hex for shorter display
+    hook_ts = format(int(time.time() % 86400), 'x')
 
     # Build the replacement: `sleep N` -> `smart-sleep N <timestamp>`
     sleep_replacement = f'{cmd_path} {duration_str} {hook_ts}'

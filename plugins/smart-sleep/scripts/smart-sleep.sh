@@ -21,7 +21,7 @@ fi
 REMAINING=$(python3 -c "
 import time, sys
 try:
-    hook_ts = float('${HOOK_TS}')
+    hook_ts = int('${HOOK_TS}', 16)
     duration = float('${DURATION}')
     now = int(time.time() % 86400)
     elapsed = (now - hook_ts + 86400) % 86400

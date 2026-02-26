@@ -129,9 +129,9 @@ class TestHookOutput(unittest.TestCase):
     def test_timestamp_passed_inline(self):
         _, output = run_hook("sleep 5")
         cmd = output["hookSpecificOutput"]["updatedInput"]["command"]
-        # Timestamp should be an integer (seconds since midnight, max 86400)
-        # Format: smart-sleep 5 <timestamp>
-        self.assertRegex(cmd, r"smart-sleep 5 \d+")
+        # Timestamp should be a hex value (seconds since midnight)
+        # Format: smart-sleep 5 <hex>
+        self.assertRegex(cmd, r"smart-sleep 5 [0-9a-f]+")
         # Should NOT contain temp file paths
         self.assertNotIn("/var/folders", cmd)
         self.assertNotIn("smart-sleep-ts-", cmd)
