@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="img.png" alt="Sleepz mascot" width="200">
+</p>
+
 # Sleepz
 
 A [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) plugin that adjusts `sleep` durations in Bash commands to account for the time you spend in the permission dialog — and Claude Code's own internal processing overhead.
