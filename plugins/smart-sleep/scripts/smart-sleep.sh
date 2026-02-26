@@ -23,7 +23,8 @@ import time, sys
 try:
     hook_ts = float('${HOOK_TS}')
     duration = float('${DURATION}')
-    elapsed = time.time() - hook_ts
+    now = int(time.time() % 86400)
+    elapsed = (now - hook_ts + 86400) % 86400
     remaining = duration - elapsed
     if remaining <= 0:
         print('0', end='')
