@@ -115,7 +115,7 @@ class TestHookOutput(unittest.TestCase):
         self.assertIn("hookSpecificOutput", output)
         hook_output = output["hookSpecificOutput"]
         self.assertEqual(hook_output["hookEventName"], "PreToolUse")
-        self.assertEqual(hook_output["permissionDecision"], "ask")
+        self.assertNotIn("permissionDecision", hook_output)
         self.assertIn("updatedInput", hook_output)
         self.assertIn("command", hook_output["updatedInput"])
 

@@ -24,13 +24,13 @@ echo ""
 
 # Test 1: Elapsed time exceeds duration -> skip entirely
 echo "Test: elapsed > duration skips sleep"
-HOOK_TS=$(python3 -c "import time; print(format(int((time.time() - 120) % 86400), 'x'))")
+HOOK_TS=$(python3 -c "import time; print(format(int((time.time() - 120) % 86400 * 100), 'x'))")
 OUTPUT=$(bash "$WRAPPER" 60 "$HOOK_TS" 2>&1)
 assert_contains "skip message" "0s (skipped)" "$OUTPUT"
 
 # Test 2: Elapsed time less than duration -> adjusted sleep (use tiny duration)
 echo "Test: elapsed < duration adjusts sleep"
-HOOK_TS=$(python3 -c "import time; print(format(int((time.time() - 0.5) % 86400), 'x'))")
+HOOK_TS=$(python3 -c "import time; print(format(int((time.time() - 0.5) % 86400 * 100), 'x'))")
 OUTPUT=$(bash "$WRAPPER" 2 "$HOOK_TS" 2>&1)
 assert_contains "adjusted message" "sleepz: 2s ->" "$OUTPUT"
 
@@ -41,7 +41,7 @@ assert_contains "missing args message" "missing arguments" "$OUTPUT"
 
 # Test 4: Very recent timestamp -> nearly full sleep (use tiny duration)
 echo "Test: very recent timestamp"
-HOOK_TS=$(python3 -c "import time; print(format(int(time.time() % 86400), 'x'))")
+HOOK_TS=$(python3 -c "import time; print(format(int(time.time() % 86400 * 100), 'x'))")
 OUTPUT=$(bash "$WRAPPER" 0.5 "$HOOK_TS" 2>&1)
 assert_contains "adjusted message" "sleepz: 0.5s ->" "$OUTPUT"
 

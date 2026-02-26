@@ -135,8 +135,8 @@ def main():
     else:
         cmd_path = sleepz_script
 
-    # Record current time as seconds-since-midnight in hex for shorter display
-    hook_ts = format(int(time.time() % 86400), 'x')
+    # Record current time as centiseconds-since-midnight in hex for shorter display
+    hook_ts = format(int(time.time() % 86400 * 100), 'x')
 
     # Build the replacement: `sleep N` -> `sleepz N <timestamp>`
     sleep_replacement = f'{cmd_path} {duration_str} {hook_ts}'

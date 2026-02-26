@@ -18,32 +18,28 @@ if [[ -z "$DURATION" || -z "$HOOK_TS" ]]; then
     exit 0
 fi
 
-# Returns "remaining elapsed" (two values separated by space)
-RESULT=$(python3 -c "
+REMAINING=$(python3 -c "
 import time, sys
 try:
-    hook_ts = int('${HOOK_TS}', 16)
+    hook_ts = int('${HOOK_TS}', 16) / 100.0
     duration = float('${DURATION}')
-    now = int(time.time() % 86400)
+    now = time.time() % 86400
     elapsed = (now - hook_ts + 86400) % 86400
     remaining = duration - elapsed
     if remaining <= 0:
-        print(f'0 {elapsed}', end='')
+        print('0', end='')
     else:
-        print(f'{remaining:.2f} {elapsed}', end='')
+        print(f'{remaining:.2f}', end='')
 except Exception as e:
-    print('${DURATION} 0', end='', file=sys.stdout)
+    print('${DURATION}', end='', file=sys.stdout)
     print(f'sleepz: calc error: {e}', file=sys.stderr)
 " 2>&2)
 
-REMAINING="${RESULT%% *}"
-ELAPSED="${RESULT##* }"
-
 if [[ "$REMAINING" == "0" ]]; then
-    echo "sleepz: ${DURATION}s -> 0s (skipped, ${ELAPSED}s elapsed)" >&2
+    echo "sleepz: ${DURATION}s -> 0s (skipped)" >&2
 elif [[ "$REMAINING" == "${DURATION}" || "$REMAINING" == "${DURATION}.00" ]]; then
     sleep "$REMAINING"
 else
-    echo "sleepz: ${DURATION}s -> ${REMAINING}s (${ELAPSED}s elapsed)" >&2
+    echo "sleepz: ${DURATION}s -> ${REMAINING}s" >&2
     sleep "$REMAINING"
 fi
