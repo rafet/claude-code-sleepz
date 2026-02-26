@@ -1,29 +1,34 @@
 # Sleepz
 
-A [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) plugin that adjusts `sleep` durations in Bash commands to account for the time you spend in the permission dialog.
+A [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) plugin that adjusts `sleep` durations in Bash commands to account for the time you spend in the permission dialog — and Claude Code's own internal processing overhead.
 
 ## The Problem
 
 When Claude Code proposes `sleep 60 && npm run build`, you have to approve it first. If you take 15 seconds to hit "Allow", the sleep still runs for the full 60 seconds — so 75 seconds pass instead of the intended 60.
 
+On top of that, Claude Code itself adds processing overhead between deciding to run a command and actually executing it. Sleepz accounts for both delays.
+
 ## How It Works
 
-A PreToolUse hook intercepts Bash commands containing `sleep`. It records a timestamp before the permission dialog appears, then replaces `sleep` with a wrapper script that calculates how much time already elapsed and sleeps only the remaining duration.
+A PreToolUse hook intercepts Bash commands containing `sleep`. It records a timestamp before the permission dialog appears, then replaces `sleep` with a wrapper script that calculates how much time already elapsed — including both user wait time and Claude Code's internal overhead — and sleeps only the remaining duration.
 
 ```
 sleep 60 && npm run build
        │
        ▼
-  Hook records timestamp
+  Hook records timestamp ─────────────────┐
+       │                                   │
+       ▼                                   │
+  Claude Code overhead (~1s)               │  These delays are
+       │                                   │  subtracted from
+       ▼                                   │  sleep duration
+  Permission dialog (you wait 15s)         │
+       │                                   │
+       ▼                                   │
+  Wrapper: 60 - 16 = 44s remaining  ──────┘
        │
        ▼
-  Permission dialog (you wait 15s)
-       │
-       ▼
-  Wrapper: 60 - 15 = 45s remaining
-       │
-       ▼
-  sleep 45 && npm run build
+  sleep 44 && npm run build
 ```
 
 ## Install
