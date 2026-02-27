@@ -102,8 +102,6 @@ Disable Sleepz temporarily with an environment variable:
 export DISABLE_CC_SLEEPZ=1
 ```
 
-Debug logs are written to `/tmp/sleepz-log.txt` for troubleshooting.
-
 ## Requirements
 
 - Bash
