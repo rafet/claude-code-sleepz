@@ -83,6 +83,17 @@ The hook itself adds only **~15ms** of overhead — negligible compared to the t
 | `sleep 10 && sleep 20` | Only the first sleep is adjusted |
 | Hook or script error | Original command runs unmodified — never breaks your workflow |
 
+## Time Saved
+
+Sleepz silently tracks how much time it saves you in `~/.claude/sleepz-stats`. To see your stats:
+
+```bash
+~/.claude/sleepz --stats
+# sleepz stats: 47 commands optimized, 3m 42s saved
+```
+
+The stats file is append-only and parallel-safe — no data is ever lost, even with multiple Claude sessions running simultaneously.
+
 ## Configuration
 
 Disable Sleepz temporarily with an environment variable:
