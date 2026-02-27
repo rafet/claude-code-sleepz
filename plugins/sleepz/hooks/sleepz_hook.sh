@@ -3,7 +3,7 @@
 #
 # Detects `sleep <number>` in Bash commands, records a timestamp, and returns
 # updatedInput with the command modified to use the sleepz wrapper.
-# Pure bash — no Python dependency.
+# Pure bash implementation.
 
 set -euo pipefail
 

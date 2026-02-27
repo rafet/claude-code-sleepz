@@ -19,7 +19,6 @@ if [[ -z "$DURATION" || -z "$HOOK_TS" ]]; then
 fi
 
 # Convert hex timestamp to decimal centiseconds, calculate remaining using awk
-# No Python subprocess needed — awk is ~5ms vs Python's ~30ms
 HOOK_CS=$((16#${HOOK_TS}))
 NOW_CS=$(date +%s%N | awk '{printf "%d", ($1 / 10000000) % 8640000}')
 
