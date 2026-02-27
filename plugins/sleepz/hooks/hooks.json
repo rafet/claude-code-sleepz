@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sleepz_hook.py",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/sleepz_hook.sh",
             "timeout": 10000
           }
         ]

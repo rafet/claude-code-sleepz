@@ -18,22 +18,22 @@ if [[ -z "$DURATION" || -z "$HOOK_TS" ]]; then
     exit 0
 fi
 
-REMAINING=$(python3 -c "
-import time, sys
-try:
-    hook_ts = int('${HOOK_TS}', 16) / 100.0
-    duration = float('${DURATION}')
-    now = time.time() % 86400
-    elapsed = (now - hook_ts + 86400) % 86400
-    remaining = duration - elapsed
-    if remaining <= 0:
-        print('0', end='')
-    else:
-        print(f'{remaining:.2f}', end='')
-except Exception as e:
-    print('${DURATION}', end='', file=sys.stdout)
-    print(f'sleepz: calc error: {e}', file=sys.stderr)
-" 2>&2)
+# Convert hex timestamp to decimal centiseconds, calculate remaining using awk
+# No Python subprocess needed — awk is ~5ms vs Python's ~30ms
+HOOK_CS=$((16#${HOOK_TS}))
+NOW_CS=$(date +%s%N | awk '{printf "%d", ($1 / 10000000) % 8640000}')
+
+REMAINING=$(awk -v hook="$HOOK_CS" -v now="$NOW_CS" -v dur="$DURATION" 'BEGIN {
+    hook_s = hook / 100.0
+    now_s = now / 100.0
+    elapsed = now_s - hook_s
+    if (elapsed < 0) elapsed += 86400
+    remaining = dur - elapsed
+    if (remaining <= 0)
+        printf "0"
+    else
+        printf "%.2f", remaining
+}')
 
 if [[ "$REMAINING" == "0" ]]; then
     echo "sleepz: ${DURATION}s -> 0s (skipped)" >&2

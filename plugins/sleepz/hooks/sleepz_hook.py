@@ -15,7 +15,6 @@ import stat
 import sys
 import time
 from datetime import datetime
-from pathlib import Path
 
 # Debug log file
 DEBUG_LOG_FILE = "/tmp/sleepz-log.txt"
@@ -35,19 +34,14 @@ def debug_log(message):
 
 
 def ensure_symlink(target_script):
-    """Ensure ~/.claude/bin/sleepz symlink exists and points to the target."""
+    """Ensure ~/.claude/sleepz symlink exists and points to the target."""
     try:
-        symlink = Path(SYMLINK_PATH)
-        symlink.parent.mkdir(parents=True, exist_ok=True)
+        # Fast path: symlink already exists
+        if os.path.islink(SYMLINK_PATH):
+            return True
 
-        if symlink.is_symlink() or symlink.exists():
-            current_target = str(symlink.resolve())
-            if current_target == str(Path(target_script).resolve()):
-                return True
-            symlink.unlink()
-
-        symlink.symlink_to(target_script)
-        # Ensure the target is executable
+        os.makedirs(os.path.dirname(SYMLINK_PATH), exist_ok=True)
+        os.symlink(target_script, SYMLINK_PATH)
         os.chmod(target_script, os.stat(target_script).st_mode | stat.S_IEXEC)
         debug_log(f"Created symlink {SYMLINK_PATH} -> {target_script}")
         return True
