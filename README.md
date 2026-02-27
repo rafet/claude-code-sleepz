@@ -32,6 +32,10 @@ Claude Code also adds its own processing overhead (~1s) between deciding to run 
 
 **Sleepz fixes this.** It accounts for both delays and ensures the total wall-clock time matches what was originally intended.
 
+<p align="center">
+  <img src="gif.gif" alt="Sleepz demo" width="600">
+</p>
+
 ## Install
 
 ```
