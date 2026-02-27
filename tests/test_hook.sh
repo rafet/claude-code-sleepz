@@ -35,7 +35,7 @@ echo ""
 
 echo "Test: basic sleep"
 OUT=$(run_hook "sleep 60")
-assert_contains "modifies command" "sleepz" "$OUT"
+assert_contains "modifies command" "THIS_WILL_FAIL" "$OUT"
 
 echo "Test: sleep with continuation"
 OUT=$(run_hook "sleep 60 && echo done")
