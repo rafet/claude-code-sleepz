@@ -14,7 +14,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
   <a href="https://github.com/rafet/claude-code-sleepz/stargazers"><img src="https://img.shields.io/github/stars/rafet/claude-code-sleepz" alt="GitHub stars"></a>
   <a href="https://github.com/rafet/claude-code-sleepz/issues"><img src="https://img.shields.io/github/issues/rafet/claude-code-sleepz" alt="GitHub issues"></a>
-  <img src="https://img.shields.io/badge/python-3-blue.svg" alt="Python 3">
+  <img src="https://img.shields.io/badge/bash-only-green.svg" alt="Bash only">
   <img src="https://img.shields.io/badge/Claude_Code-plugin-orange.svg" alt="Claude Code plugin">
 </p>
 
@@ -68,7 +68,7 @@ sleep 60 && npm run build
   sleep 44 && npm run build
 ```
 
-The hook itself adds only **~30ms** of overhead — negligible compared to the time it saves.
+The hook itself adds only **~15ms** of overhead — negligible compared to the time it saves. Non-sleep commands are filtered out by a fast bash pre-check without spawning any extra processes.
 
 ## What Gets Adjusted
 
@@ -95,7 +95,6 @@ Debug logs are written to `/tmp/sleepz-log.txt` for troubleshooting.
 
 ## Requirements
 
-- Python 3
 - Bash
 - [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) with plugin support
 

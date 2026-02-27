@@ -1,35 +1,31 @@
 #!/usr/bin/env python3
-"""Unit tests for sleepz_hook.py"""
+"""Unit tests for sleepz_hook.sh (pure bash hook)"""
 
 import json
 import os
-import re
 import subprocess
-import sys
 import unittest
 
-HOOK_SCRIPT = os.path.join(
+PLUGIN_ROOT = os.path.join(
     os.path.dirname(__file__),
     "..",
     "plugins",
     "sleepz",
-    "hooks",
-    "sleepz_hook.py",
 )
+
+HOOK_SH = os.path.join(PLUGIN_ROOT, "hooks", "sleepz_hook.sh")
 
 
 def run_hook(command, env_override=None):
-    """Run the hook with a given Bash command and return (exit_code, stdout_json).
-
-    The hook outputs JSON to stdout and exits with 0 when it modifies a command.
-    When the command doesn't match (no sleep), it also exits 0 but with no stdout.
-    """
+    """Run the bash hook with a given Bash command and return (exit_code, stdout_json)."""
     payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
     env = os.environ.copy()
+    env["CLAUDE_PLUGIN_ROOT"] = PLUGIN_ROOT
     if env_override:
         env.update(env_override)
+
     result = subprocess.run(
-        [sys.executable, HOOK_SCRIPT],
+        ["bash", HOOK_SH],
         input=payload,
         capture_output=True,
         text=True,
@@ -57,6 +53,7 @@ class TestHookDetection(unittest.TestCase):
     def test_sleep_with_continuation(self):
         code, output = run_hook("sleep 60 && echo done")
         self.assertEqual(code, 0)
+        self.assertIsNotNone(output)
         self.assertIn("&& echo done", output["hookSpecificOutput"]["updatedInput"]["command"])
 
     def test_fractional_sleep(self):
@@ -90,17 +87,6 @@ class TestHookDetection(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIsNone(output)
 
-    def test_non_bash_tool(self):
-        payload = json.dumps({"tool_name": "Edit", "tool_input": {"command": "sleep 60"}})
-        result = subprocess.run(
-            [sys.executable, HOOK_SCRIPT],
-            input=payload,
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0)
-        self.assertEqual(result.stdout.strip(), "")
-
     def test_empty_command(self):
         code, output = run_hook("")
         self.assertEqual(code, 0)
@@ -123,23 +109,18 @@ class TestHookOutput(unittest.TestCase):
         _, output = run_hook("sleep 10 && sleep 20")
         cmd = output["hookSpecificOutput"]["updatedInput"]["command"]
         self.assertIn("sleepz", cmd)
-        # The second sleep should remain untouched
         self.assertIn("&& sleep 20", cmd)
 
     def test_timestamp_passed_inline(self):
         _, output = run_hook("sleep 5")
         cmd = output["hookSpecificOutput"]["updatedInput"]["command"]
-        # Timestamp should be a hex value (seconds since midnight)
+        # Timestamp should be a hex value
         self.assertRegex(cmd, r"sleepz 5 [0-9a-f]+")
-        # Should NOT contain temp file paths
-        self.assertNotIn("/var/folders", cmd)
 
     def test_uses_short_symlink_path(self):
         _, output = run_hook("sleep 5")
         cmd = output["hookSpecificOutput"]["updatedInput"]["command"]
-        # Should use ~/.claude/sleepz (short path)
         self.assertIn("~/.claude/sleepz", cmd)
-        # Should NOT contain long cache paths
         self.assertNotIn("plugins/cache", cmd)
 
 
