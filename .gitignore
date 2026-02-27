@@ -1,4 +1,6 @@
 *.swp
 *.swo
 .DS_Store
-__pycache__/
+_bmad/
+_bmad-output/
+.claude/commands/
