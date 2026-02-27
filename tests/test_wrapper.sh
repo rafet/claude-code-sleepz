@@ -5,64 +5,70 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WRAPPER="$SCRIPT_DIR/../plugins/sleepz/scripts/sleepz.sh"
-PASS=0
-FAIL=0
 
-assert_contains() {
-    local test_name="$1" expected="$2" actual="$3"
-    if [[ "$actual" == *"$expected"* ]]; then
-        echo "  PASS: $test_name"
-        ((PASS++))
-    else
-        echo "  FAIL: $test_name (expected to contain '$expected', got '$actual')"
-        ((FAIL++))
-    fi
-}
+# Shared helpers
+source "$SCRIPT_DIR/test_helpers.sh"
 
-# Use temp stats file so tests don't pollute real stats
-TEST_STATS=$(mktemp)
-rm -f "$TEST_STATS"
-export HOME_BACKUP="$HOME"
+# Constants for timestamp calculations
+SECS_PER_DAY=86400
+CENTISEC=100
 
-# Create a temp home so stats go to a controlled location
+# Isolate filesystem: temp HOME + cleanup trap
+HOME_BACKUP="$HOME"
 TEST_HOME=$(mktemp -d)
 export HOME="$TEST_HOME"
 mkdir -p "$TEST_HOME/.claude"
 
+# Mock sleep: no-op so tests run instantly
+MOCK_BIN=$(mktemp -d)
+cat > "$MOCK_BIN/sleep" << 'MOCK'
+#!/bin/bash
+exit 0
+MOCK
+chmod +x "$MOCK_BIN/sleep"
+PATH_BACKUP="$PATH"
+export PATH="$MOCK_BIN:$PATH"
+
 cleanup() {
-    rm -rf "$TEST_HOME"
+    rm -rf "$TEST_HOME" "$MOCK_BIN"
     export HOME="$HOME_BACKUP"
+    export PATH="$PATH_BACKUP"
 }
 trap cleanup EXIT
+
+# Helper: generate hook timestamp with a given elapsed offset (in seconds)
+make_hook_ts() {
+    local elapsed_secs="$1"
+    local now_secs
+    now_secs=$(date +%s)
+    printf '%x' $(( (now_secs - elapsed_secs) % SECS_PER_DAY * CENTISEC ))
+}
 
 echo "=== sleepz.sh wrapper tests ==="
 echo ""
 
 # Test 1: Elapsed time exceeds duration -> skip entirely
 echo "Test: elapsed > duration skips sleep"
-NOW_SECS=$(date +%s)
-HOOK_TS=$(printf '%x' $(( (NOW_SECS - 120) % 86400 * 100 )))
+HOOK_TS=$(make_hook_ts 120)
 OUTPUT=$(bash "$WRAPPER" 60 "$HOOK_TS" 2>&1)
 assert_contains "skip message" "0s (skipped)" "$OUTPUT"
 
-# Test 2: Elapsed time less than duration -> adjusted sleep (use tiny duration)
+# Test 2: Elapsed time less than duration -> adjusted sleep
 echo "Test: elapsed < duration adjusts sleep"
-NOW_SECS=$(date +%s)
-HOOK_TS=$(printf '%x' $(( (NOW_SECS - 1) % 86400 * 100 )))
-OUTPUT=$(bash "$WRAPPER" 2 "$HOOK_TS" 2>&1)
-assert_contains "adjusted message" "sleepz: 2s ->" "$OUTPUT"
+HOOK_TS=$(make_hook_ts 5)
+OUTPUT=$(bash "$WRAPPER" 60 "$HOOK_TS" 2>&1)
+assert_contains "adjusted message" "sleepz: 60s ->" "$OUTPUT"
 
 # Test 3: Missing arguments -> graceful fallback
 echo "Test: missing arguments"
 OUTPUT=$(bash "$WRAPPER" 0 "" 2>&1 || true)
 assert_contains "missing args message" "missing arguments" "$OUTPUT"
 
-# Test 4: Very recent timestamp -> nearly full sleep (use tiny duration)
+# Test 4: Very recent timestamp -> nearly full sleep
 echo "Test: very recent timestamp"
-NOW_SECS=$(date +%s)
-HOOK_TS=$(printf '%x' $(( NOW_SECS % 86400 * 100 )))
-OUTPUT=$(bash "$WRAPPER" 0.5 "$HOOK_TS" 2>&1)
-assert_contains "adjusted message" "sleepz: 0.5s ->" "$OUTPUT"
+HOOK_TS=$(make_hook_ts 1)
+OUTPUT=$(bash "$WRAPPER" 60 "$HOOK_TS" 2>&1)
+assert_contains "adjusted message" "sleepz: 60s ->" "$OUTPUT"
 
 # ── Stats tracking tests ──
 
@@ -70,17 +76,22 @@ echo ""
 echo "=== Stats Tracking Tests ==="
 echo ""
 
-# Test 5: Stats file created after time is saved
-echo "Test: stats file created on save"
 STATS_FILE="$TEST_HOME/.claude/sleepz-stats"
+
+# Test 5: Stats file created when time is saved (self-contained)
+echo "Test: stats file created on save"
+rm -f "$STATS_FILE"
+HOOK_TS=$(make_hook_ts 10)
+bash "$WRAPPER" 60 "$HOOK_TS" 2>/dev/null
 if [[ -f "$STATS_FILE" ]]; then
-    assert_contains "stats file exists" "" "ok"
+    echo "  PASS: stats file created"
+    ((PASS++))
 else
     echo "  FAIL: stats file not created"
     ((FAIL++))
 fi
 
-# Test 6: Stats file has entries
+# Test 6: Stats file has entries after save
 echo "Test: stats file has entries"
 LINE_COUNT=$(wc -l < "$STATS_FILE" 2>/dev/null | tr -d ' ')
 if [[ "$LINE_COUNT" -gt 0 ]]; then
@@ -110,6 +121,6 @@ rm -f "$STATS_FILE"
 OUTPUT=$(bash "$WRAPPER" --stats 2>&1)
 assert_contains "no data message" "no data yet" "$OUTPUT"
 
-echo ""
-echo "=== Results: $PASS passed, $FAIL failed ==="
-exit $FAIL
+# ── Results ──
+
+report_results
